@@ -32,8 +32,7 @@
         app:layout_constraintEnd_toStartOf="@id/menu"
         app:layout_constraintTop_toTopOf="@id/avatar"
         app:layout_constraintBottom_toTopOf="@id/published"
-        android:text="Нетологияzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz. Университет интернет-профессий"
-        />
+        android:text="почему бы и нет"        />
 
     <TextView
         android:id="@+id/published"
@@ -73,7 +72,12 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@id/barrier"
-        android:text="Привет, это ggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg новая Нетология! Когда-то Нетология начиналась с интенсивов по онлайн-маркетингу. Затем появились курсы по дизайну, разработке, аналитике и управлению. Мы растём сами и помогаем расти студентам: от новичков до уверенных профессионалов." />
+        android:text="Жизнь в гараже нестандартное решение, которое открывает ряд преимуществ перед традиционными жилищами:
+        Низкая стоимость: Гаражи часто обходятся дешевле квартир или домов, позволяя сэкономить средства на жилье.
+        Простота обустройства: Пространство легко переделывается под жилые нужды благодаря компактности и простоте конструкций.
+        Идеальное место для творческих людей: Отличная возможность организовать мастерскую, студию или хобби-зону рядом с домом.
+        Жилище в гараже подходит людям, ценящим свободу, креативность и жизнь вне рамок традиционных стандартов комфорта."
+        />
 
     <LinearLayout
         android:id="@+id/link_block"
@@ -95,7 +99,7 @@
             android:textSize="14sp"
             android:textStyle="bold"
             android:textColor="@color/purple_500"
-            android:text="Новая Нетология: 4 уровня карьеры" />
+            android:text="продам гараж 8 990 234 54 36" />
 
         <TextView
             android:id="@+id/link_url"
@@ -103,7 +107,7 @@
             android:layout_height="wrap_content"
             android:textSize="12sp"
             android:textColor="@android:color/darker_gray"
-            android:text="netology.ru" />
+            android:text="Ovito.ru" />
     </LinearLayout>
 
     <LinearLayout
