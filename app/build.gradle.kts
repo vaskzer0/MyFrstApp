@@ -10,6 +10,10 @@ android {
         }
     }
 
+    buildFeatures {
+        viewBinding = true
+    }
+
     defaultConfig {
         applicationId = "com.example.myfrstapplication"
         minSdk = 24
