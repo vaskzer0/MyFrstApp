@@ -3,13 +3,24 @@ package com.example.myfrstapplication.repository
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.example.myfrstapplication.dto.Post
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class PostRepositoryInMemoryImpl : PostRepository {
+    // Счетчик для генерации ID
+    private var nextId = 5L
+
+    // Текущий пользователь (для демонстрации)
+    private val currentUserId = 1L
+    private val currentUserName = "Я"
+
     // Теперь это список, а не один пост
     private var posts = listOf(
         Post(
             id = 1,
             author = "почему бы и нет",
+            authorId = 2,
             content = "Жизнь в гараже нестандартное решение, которое открывает ряд преимуществ перед традиционными жилищами: Низкая стоимость: Гаражи часто обходятся дешевле квартир или домов, позволяя сэкономить средства на жилье.\n" +
                     "Простота обустройства: Пространство легко переделывается под жилые нужды благодаря компактности и простоте конструкций.\n" +
                     "Идеальное место для творческих людей: Отличная возможность организовать мастерскую, студию или хобби-зону рядом с домом.\n" +
@@ -23,6 +34,7 @@ class PostRepositoryInMemoryImpl : PostRepository {
         Post(
             id = 2,
             author = "гоночное сообщество быстрые ножки",
+            authorId = 3,
             content = "Инвалидные кресла играют важную роль в жизни миллионов людей во всём мире, обеспечивая мобильность, комфорт и возможность вести активный образ жизни людям с ограниченными возможностями передвижения. Современные модели кресел отличаются высоким уровнем комфорта, функциональности и надежности, помогая человеку чувствовать себя уверенно вне зависимости от обстоятельств.",
             published = "28 мая в 10:25",
             likedByMe = false,
@@ -33,6 +45,7 @@ class PostRepositoryInMemoryImpl : PostRepository {
         Post(
             id = 3,
             author = "ремонт и строительство!",
+            authorId = 4,
             content = "ИЩЕТЕ НЕДОРОГИЕ, КАЧЕСТВЕННЫЕ И КРАСИВЫЕ КЕРАМИЧЕСКИЕ ПЛИТКИ?\n" +
                     "\n" +
                     "Представляем вашему вниманию нашу коллекцию кафельной плитки премиум-класса по доступным ценам!\n" +
@@ -51,6 +64,7 @@ class PostRepositoryInMemoryImpl : PostRepository {
         Post(
             id = 4,
             author = "анегдоты",
+            authorId = 5,
             content = "Встречаются двое друзей:— Ты слышал новость? Армянский миллионер решил вложить деньги в новый бизнес-проект.— А что за проект?— Будет выпускать растворимый кофе.— Это понятно, а почему именно кофе?— Ну, представляешь, насколько удобней пить натуральный кофе, когда достаточно добавить горячей воды? А тут вообще ничего варить не надо — залил кипятком и готово! Настоящий прорыв в индустрии напитков! Только название неудачное получилось…— Почему?— Да потому что назвал его… «Растворимый Мугник».",
             published = "15 мая в 08:00",
             likedByMe = false,
@@ -61,6 +75,7 @@ class PostRepositoryInMemoryImpl : PostRepository {
         Post(
             id = 5,
             author = "шашлычная на газу",
+            authorId = 6,
             content = "Шашлык на газу — отличный способ приготовить сочное мясо быстро и удобно, особенно если хочется насладиться вкусом качественного блюда без копоти и сильного запаха дыма. Традиционный вариант приготовления шашлыка предполагает открытый огонь и угли, однако современные технологии позволяют добиться похожего результата даже с помощью газовых горелок.",
             published = "23 мая в 09:42",
             likedByMe = true,
@@ -109,5 +124,42 @@ class PostRepositoryInMemoryImpl : PostRepository {
             }
         }
         _data.value = posts
+    }
+    override fun save(post: Post) {
+        if (post.id == 0L) {
+            // Создание нового поста
+            val newPost = post.copy(
+                id = nextId++,
+                author = currentUserName,
+                authorId = currentUserId,
+                published = formatDate(Date()),
+                likedByMe = false,
+                likes = 0,
+                shares = 0,
+                views = 0
+            )
+            posts = listOf(newPost) + posts
+        } else {
+            // Обновление существующего поста
+            posts = posts.map { existingPost ->
+                if (existingPost.id == post.id) {
+                    // Сохраняем автора, дату и счетчики, обновляем только контент
+                    existingPost.copy(content = post.content)
+                } else {
+                    existingPost
+                }
+            }
+        }
+        _data.value = posts
+    }
+
+    override fun removeById(id: Long) {
+        posts = posts.filter { it.id != id }
+        _data.value = posts
+    }
+
+    private fun formatDate(date: Date): String {
+        val format = SimpleDateFormat("d MMM в HH:mm", Locale("ru"))
+        return format.format(date)
     }
 }
