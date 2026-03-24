@@ -1,10 +1,12 @@
 package com.example.myfrstapplication
 
+import android.content.Context.INPUT_METHOD_SERVICE
 import android.os.Bundle
 import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.widget.addTextChangedListener
 import com.example.myfrstapplication.adapter.OnPostInteractionListener
 import com.example.myfrstapplication.adapter.PostsAdapter
@@ -20,6 +22,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val viewModel: PostViewModel by viewModels()
 
+    // ID поста, который редактируется (0 = новый пост)
+    private var editingPostId: Long = 0L
+
     private val interactionListener = object : OnPostInteractionListener {
         override fun onLike(post: Post) {
             viewModel.likeById(post.id)
@@ -31,10 +36,18 @@ class MainActivity : AppCompatActivity() {
         }
 
         override fun onEdit(post: Post) {
-            viewModel.edit(post)
-            // Переводим фокус на поле ввода
+            // Сохраняем ID редактируемого поста
+            editingPostId = post.id
+            // Устанавливаем текст в поле ввода
+            binding.content.setText(post.content)
+            binding.content.setSelection(binding.content.text.length)
+            // Переводим фокус и показываем клавиатуру
             binding.content.requestFocus()
+            showKeyboard(binding.content)
+            // Показываем панель отмены
+            binding.cancelGroup.visibility = View.VISIBLE
         }
+
 
         override fun onRemove(post: Post) {
             viewModel.removeById(post.id)
@@ -62,54 +75,62 @@ class MainActivity : AppCompatActivity() {
             adapter.submitList(posts)
         }
 
-        // Наблюдение за редактируемым постом
-        viewModel.edited.observe(this) { post ->
-            if (post.id != 0L) {
-                // Редактирование существующего поста
-                binding.content.setText(post.content)
-                binding.content.requestFocus()
-            }
-                /*else {
-                // Сброс (новый пост или отмена)
-                binding.content.setText("")
-            }*/
-        }
-
-        // Наблюдение за режимом редактирования
-        viewModel.editingMode.observe(this) { isEditing ->
-            if (isEditing) {
-                binding.cancelGroup.visibility = View.VISIBLE
-            } else {
-                binding.cancelGroup.visibility = View.GONE
-            }
-        }
-
-        // Отслеживание изменений текста
+        // Отслеживание изменений текста от пользователя
         binding.content.addTextChangedListener { text ->
+            // Обновляем ViewModel при изменении текста пользователем
             viewModel.changeContent(text.toString())
         }
 
         // Кнопка сохранения
         binding.save.setOnClickListener {
-            if (binding.content.text.isNullOrBlank()) {
+            val text = binding.content.text.toString()
+            if (text.isBlank()) {
                 Toast.makeText(this, "Введите текст поста", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            viewModel.save()
+
+            // Если редактируем существующий пост
+            if (editingPostId != 0L) {
+                // Получаем текущий пост из ViewModel, обновляем его контент и сохраняем
+                viewModel.saveEditedPost(editingPostId, text)
+                editingPostId = 0L
+            } else {
+                // Создаем новый пост
+                viewModel.changeContent(text)
+                viewModel.save()
+            }
+
+            // Очищаем поле ввода
+            binding.content.text.clear()
+            // Скрываем панель отмены
+            binding.cancelGroup.visibility = View.GONE
             // Скрываем клавиатуру
             hideKeyboard(binding.content)
         }
 
         // Кнопка отмены редактирования
         binding.cancel.setOnClickListener {
-            viewModel.cancelEdit()
+            // Очищаем ID редактируемого поста
+            editingPostId = 0L
+            // Очищаем поле ввода
+            binding.content.text.clear()
+            // Скрываем панель отмены
+            binding.cancelGroup.visibility = View.GONE
+            // Скрываем клавиатуру
             hideKeyboard(binding.content)
+            // Отменяем редактирование в ViewModel
+            viewModel.cancelEdit()
         }
     }
 
     private fun hideKeyboard(view: View) {
         val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
+    private fun showKeyboard(view: View) {
+        val imm = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        imm.showSoftInput(view, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
     }
 }
 
