@@ -5,6 +5,7 @@ import androidx.lifecycle.MutableLiveData
 import com.example.myfrstapplication.dto.Post
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.List
 import java.util.Locale
 
 class PostRepositoryInMemoryImpl : PostRepository {
@@ -189,7 +190,7 @@ class PostRepositoryInMemoryImpl : PostRepository {
 
     private val _data = MutableLiveData(posts)
 
-    override fun getAll(): LiveData<List<Post>> = _data
+    override fun getAll(): LiveData<List<Post>> = _data as LiveData<List<Post>>
 
     override fun likeById(id: Long) {
         posts = posts.map { post ->

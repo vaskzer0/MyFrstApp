@@ -90,7 +90,7 @@ class MainActivity : AppCompatActivity() {
 
         // Наблюдение за списком постов
         viewModel.data.observe(this) { posts ->
-            adapter.submitList(posts)
+            adapter.submitList(posts as List<Post?>?)
         }
 
         // Отслеживание изменений текста от пользователя

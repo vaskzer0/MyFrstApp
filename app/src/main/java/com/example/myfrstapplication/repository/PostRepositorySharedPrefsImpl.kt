@@ -1,0 +1,310 @@
+package com.example.myfrstapplication.repository
+
+import android.content.Context
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import com.example.myfrstapplication.dto.Post
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.List
+import java.util.Locale
+
+
+class PostRepositorySharedPrefsImpl(
+    private val context: Context
+) : PostRepository {
+
+    private val gson = Gson()
+    private val prefs = context.getSharedPreferences("posts_repo", Context.MODE_PRIVATE)
+    private val type = object : TypeToken<List<Post>>() {}.type
+    private val key = "posts"
+
+    private var nextId = 1L
+    private val currentUserId = 1L
+    private val currentUserName = "Я"
+
+    private var posts = emptyList<Post>()
+    private val _data = MutableLiveData(posts)
+
+    init {
+        loadData()
+    }
+
+    override fun getAll(): LiveData<List<Post>> = _data as LiveData<List<Post>>
+
+    override fun likeById(id: Long) {
+        posts = posts.map { post ->
+            if (post.id == id) {
+                post.copy(
+                    likedByMe = !post.likedByMe,
+                    likes = if (post.likedByMe) post.likes - 1 else post.likes + 1
+                )
+            } else {
+                post
+            }
+        }
+        _data.value = posts
+        saveData()
+    }
+
+    override fun shareById(id: Long) {
+        posts = posts.map { post ->
+            if (post.id == id) {
+                post.copy(shares = post.shares + 1)
+            } else {
+                post
+            }
+        }
+        _data.value = posts
+        saveData()
+    }
+
+    override fun increaseViews(id: Long) {
+        posts = posts.map { post ->
+            if (post.id == id) {
+                post.copy(views = post.views + 1)
+            } else {
+                post
+            }
+        }
+        _data.value = posts
+        saveData()
+    }
+
+    override fun save(post: Post) {
+        posts = if (post.id == 0L) {
+            val newPost = post.copy(
+                id = nextId++,
+                author = currentUserName,
+                authorId = currentUserId,
+                published = formatDate(Date()),
+                likedByMe = false,
+                likes = 0,
+                shares = 0,
+                views = 0
+            )
+            listOf(newPost) + posts
+        } else {
+            posts.map { existingPost ->
+                if (existingPost.id == post.id) {
+                    existingPost.copy(content = post.content)
+                } else {
+                    existingPost
+                }
+            }
+        }
+        _data.value = posts
+        saveData()
+    }
+
+    override fun removeById(id: Long) {
+        posts = posts.filter { it.id != id }
+        _data.value = posts
+        saveData()
+    }
+
+    private fun loadData() {
+        val json = prefs.getString(key, null)
+        if (json != null) {
+            try {
+                val loadedPosts: List<Post> = gson.fromJson(json, type)
+                if (loadedPosts.isNotEmpty()) {
+                    posts = loadedPosts as kotlin.collections.List<Post>
+                    nextId = (posts.maxOfOrNull { it.id } ?: 0) + 1
+                    _data.value = posts
+                    return
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+        createInitialData()
+        saveData()
+    }
+
+    private fun saveData() {
+        prefs.edit().putString(key, gson.toJson(posts)).apply()
+    }
+
+    private fun createInitialData() {
+        // Аналогично файловой реализации
+        posts = listOf(
+            Post(
+                id = 1,
+                author = "почему бы и нет",
+                authorId = 2,
+                content = "Жизнь в гараже нестандартное решение, которое открывает ряд преимуществ перед традиционными жилищами: Низкая стоимость: Гаражи часто обходятся дешевле квартир или домов, позволяя сэкономить средства на жилье.\n" +
+                        "Простота обустройства: Пространство легко переделывается под жилые нужды благодаря компактности и простоте конструкций.\n" +
+                        "Идеальное место для творческих людей: Отличная возможность организовать мастерскую, студию или хобби-зону рядом с домом.\n" +
+                        "Жилище в гараже подходит людям, ценящим свободу, креативность и жизнь вне рамок традиционных стандартов комфорта.\"",
+                published = "21 мая в 18:36",
+                likedByMe = false,
+                likes = 999,
+                shares = 25,
+                views = 5700,
+                video = "https://youtu.be/L9yYlEzN4Iw"
+            ),
+            Post(
+                id = 2,
+                author = "гоночное сообщество быстрые ножки",
+                authorId = 3,
+                content = "Инвалидные кресла играют важную роль в жизни миллионов людей во всём мире, обеспечивая мобильность, комфорт и возможность вести активный образ жизни людям с ограниченными возможностями передвижения. Современные модели кресел отличаются высоким уровнем комфорта, функциональности и надежности, помогая человеку чувствовать себя уверенно вне зависимости от обстоятельств.",
+                published = "28 мая в 10:25",
+                likedByMe = false,
+                likes = 3142,
+                shares = 189,
+                views = 5300,
+                video = null
+            ),
+            Post(
+                id = 3,
+                author = "ремонт и строительство!",
+                authorId = 4,
+                content = "ИЩЕТЕ НЕДОРОГИЕ, КАЧЕСТВЕННЫЕ И КРАСИВЫЕ КЕРАМИЧЕСКИЕ ПЛИТКИ?\n" +
+                        "\n" +
+                        "Представляем вашему вниманию нашу коллекцию кафельной плитки премиум-класса по доступным ценам!\n" +
+                        "\n" +
+                        "Идеальное сочетание эстетики и долговечности Огромный выбор цветов и фактур Удобство укладки и ухода Экологичность и безопасность Доступные цены и выгодные условия покупки  \n" +
+                        "\n" +
+                        "Наши плитки украшают кухни, санузлы, коридоры и балконы тысяч российских домов, радуя глаз и подчеркивая индивидуальность интерьера.\n" +
+                        "\n" +
+                        "Позвольте своему дому сиять красотой и элегантностью современной керамической плитки!",
+                published = "2 мая в 01:42",
+                likedByMe = true,
+                likes = 1250,
+                shares = 420,
+                views = 8900,
+                video = null
+            ),
+            Post(
+                id = 4,
+                author = "анегдоты",
+                authorId = 5,
+                content = "Встречаются двое друзей:— Ты слышал новость? Армянский миллионер решил вложить деньги в новый бизнес-проект.— А что за проект?— Будет выпускать растворимый кофе.— Это понятно, а почему именно кофе?— Ну, представляешь, насколько удобней пить натуральный кофе, когда достаточно добавить горячей воды? А тут вообще ничего варить не надо — залил кипятком и готово! Настоящий прорыв в индустрии напитков! Только название неудачное получилось…— Почему?— Да потому что назвал его… «Растворимый Мугник».",
+                published = "15 мая в 08:00",
+                likedByMe = false,
+                likes = 5678,
+                shares = 1234,
+                views = 45000,
+                video = null
+            ),
+            Post(
+                id = 5,
+                author = "шашлычная на газу",
+                authorId = 6,
+                content = "Шашлык на газу — отличный способ приготовить сочное мясо быстро и удобно, особенно если хочется насладиться вкусом качественного блюда без копоти и сильного запаха дыма. Традиционный вариант приготовления шашлыка предполагает открытый огонь и угли, однако современные технологии позволяют добиться похожего результата даже с помощью газовых горелок.",
+                published = "23 мая в 09:42",
+                likedByMe = true,
+                likes = 9250,
+                shares = 5420,
+                views = 18900,
+                video = null
+            )
+            ,
+            Post(
+                id = 6,
+                author = "мода бегемота",
+                authorId = 7,
+                content = "Носки с сандалиями — это не про комфорт, а про смелость быть собой. Такой стиль ломает стереотипы, привлекает внимание и показывает, что ты не боишься экспериментов. Это выбор тех, кто ценит индивидуальность выше чужих мнений. В конце концов, круто не то, что принято, а то, что ты носишь с уверенностью.",
+                published = "13 мая в 07:22",
+                likedByMe = true,
+                likes = 9250,
+                shares = 5420,
+                views = 18900,
+                video = null
+            )
+            ,
+            Post(
+                id = 7,
+                author = "почему бы и нет",
+                authorId = 8,
+                content = "Ваш автомобиль заслуживает лучшего! Современный гаражный комплекс «Свежесть» — это надёжная защита, комфорт и удобство для вашего авто.\n" +
+                        "Безопасность 24/7: круглосуточная охрана, видеонаблюдение и доступ по пропускам.\n" +
+                        "Идеальные условия: сухость, чистота и оптимальная температура круглый год.\n" +
+                        "Удобное расположение: легко добраться из любой части города.\n" +
+                        "Дополнительные сервисы: зарядка электромобилей, мойка и техническое обслуживание.\n" +
+                        "С «Свежестью» вы всегда уверены в сохранности своего автомобиля. Выбирайте надёжность и комфорт!",
+                published = "23 мая в 19:00",
+                likedByMe = true,
+                likes = 9250,
+                shares = 5420,
+                views = 18900,
+                video = null
+            )
+            ,
+            Post(
+                id = 8,
+                author = "почему бы и нет",
+                authorId = 9,
+                content = "Пока город спит, вы выходите на пробежку по просторным, хорошо освещённым паркингам комплекса. Здесь нет машин, только свежий воздух и безопасность. Ровные дорожки, отсутствие городского шума и суеты — идеальные условия для того, чтобы зарядиться энергией и настроиться на продуктивный день.\n" +
+                        "\n" +
+                        "Ваша лучшая пробежка начинается там, где комфорт встречается с заботой о себе. Гаражный комплекс — территория вашего утреннего старта.",
+                published = "01 мая в 04:40",
+                likedByMe = true,
+                likes = 9250,
+                shares = 5420,
+                views = 18900,
+                video = null
+            ),
+            Post(
+                id = 9,
+                author = "почему бы и нет",
+                authorId = 10,
+                content = "Открытие своего дела в гараже — это отличная идея для старта! Минимальные вложения, свобода творчества и возможность работать в собственном ритме. Гараж становится не просто помещением, а настоящей лабораторией идей, где рождаются проекты и воплощаются мечты. Здесь можно смело экспериментировать, не боясь ошибок, и постепенно превращать любимое дело в успешный бизнес.",
+                published = "04 мая в 12:42",
+                likedByMe = true,
+                likes = 9250,
+                shares = 5420,
+                views = 18900,
+                video = null
+            )
+            ,
+            Post(
+                id = 10,
+                author = "шашлычная на газу & почему бы и нет",
+                authorId = 11,
+                content = "Лучшие майские праздники начинаются с компании друзей и жареного на мангале мяса.\n" +
+                        " Классический шашлык из свинины\n" +
+                        "Ингредиенты:\n" +
+                        "\n" +
+                        "Свиная шея — 2 кг.\n" +
+                        "Лук — 2 кг.\n" +
+                        "Соль, чёрный перец, кориандр, лавровый лист.\n" +
+                        "Как готовить:\n" +
+                        "\n" +
+                        "Мясо нарезать кусками, лук — полукольцами.\n" +
+                        "Перемешать с солью и специями, помять руками.\n" +
+                        "Мариновать 4–12 часов.\n" +
+                        "Жарить на углях 15–20 минут, часто переворачивая.\n" +
+                        "Подавать с зеленью и свежими овощами.",
+                published = "1 мая в 00:12",
+                likedByMe = true,
+                likes = 9250,
+                shares = 5420,
+                views = 18900,
+                video = null
+            ),
+            Post(
+                id = 11,
+                author = "почему бы и нет",
+                authorId = 12,
+                content = "Гараж — это не просто место для машины. Для многих это личная территория, где можно уединиться, заняться любимым делом или даже начать свой первый бизнес. Здесь рождаются идеи, собираются друзья, а запах свежего масла и металла становится частью атмосферы творчества и свободы. В гараже всё по-настоящему: от ремонта авто до запуска новых проектов. Это пространство, где каждый чувствует себя хозяином своей маленькой вселенной.",
+                published = "8 апреля в 07:42",
+                likedByMe = true,
+                likes = 9250,
+                shares = 5420,
+                views = 18900,
+                video = null
+            )
+
+        )
+        _data.value = posts
+    }
+
+    private fun formatDate(date: Date): String {
+        val format = SimpleDateFormat("d MMM в HH:mm", Locale("ru"))
+        return format.format(date)
+    }
+}

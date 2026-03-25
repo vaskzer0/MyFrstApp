@@ -1,17 +1,23 @@
 package com.example.myfrstapplication.viewmodel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.myfrstapplication.dto.Post
 import com.example.myfrstapplication.repository.PostRepository
+import com.example.myfrstapplication.repository.PostRepositoryFileImpl
 import com.example.myfrstapplication.repository.PostRepositoryInMemoryImpl
+import java.util.List
 
-class PostViewModel : ViewModel() {
+class PostViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository: PostRepository = PostRepositoryInMemoryImpl()
+    // Используем файловую реализацию с передачей контекста приложения
+    private val repository: PostRepository = PostRepositoryFileImpl(application)
 
-    // Пустой пост для создания нового
+    val data: LiveData<List<Post>> = repository.getAll()
+
     private val empty = Post(
         id = 0,
         author = "",
@@ -19,23 +25,15 @@ class PostViewModel : ViewModel() {
         published = ""
     )
 
-    // Список всех постов
-    val data: LiveData<List<Post>> = repository.getAll()
-
-    // Редактируемый пост
     private val _edited = MutableLiveData(empty)
     val edited: LiveData<Post> = _edited
 
-    // Флаг, показываем ли панель отмены
     private val _editingMode = MutableLiveData(false)
     val editingMode: LiveData<Boolean> = _editingMode
 
     fun likeById(id: Long) = repository.likeById(id)
-
     fun shareById(id: Long) = repository.shareById(id)
-
     fun increaseViews(id: Long) = repository.increaseViews(id)
-
     fun removeById(id: Long) = repository.removeById(id)
 
     fun save() {
@@ -44,7 +42,6 @@ class PostViewModel : ViewModel() {
                 repository.save(post)
             }
         }
-        // Сбрасываем режим редактирования
         _edited.value = empty
         _editingMode.value = false
     }
@@ -62,26 +59,14 @@ class PostViewModel : ViewModel() {
             }
         }
     }
-    fun saveEditedPost(postId: Long, newContent: String) {
-        // Получаем текущие данные о посте
-        val currentPosts = data.value ?: return
-        val existingPost = currentPosts.find { it.id == postId } ?: return
-
-        // Создаем обновленный пост с новым контентом
-        val updatedPost = existingPost.copy(content = newContent)
-
-        // Сохраняем через репозиторий
-        repository.save(updatedPost)
-
-        // Сбрасываем режим редактирования
-        _edited.value = empty
-        _editingMode.value = false
-    }
 
     fun cancelEdit() {
         _edited.value = empty
         _editingMode.value = false
     }
+
+    fun saveEditedPost(editingPostId: Long, text: String) {}
 }
+
 
 

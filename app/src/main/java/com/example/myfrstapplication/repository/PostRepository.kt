@@ -2,6 +2,7 @@ package com.example.myfrstapplication.repository
 
 import androidx.lifecycle.LiveData
 import com.example.myfrstapplication.dto.Post
+import java.util.List
 
 interface PostRepository {
     fun getAll(): LiveData<List<Post>>
