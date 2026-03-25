@@ -80,6 +80,16 @@
         Идеальное место для творческих людей: Отличная возможность организовать мастерскую, студию или хобби-зону рядом с домом.
         Жилище в гараже подходит людям, ценящим свободу, креативность и жизнь вне рамок традиционных стандартов комфорта."
             />
+    <!-- Контейнер для видео (изначально пустой, будет заполняться программно) -->
+    <FrameLayout
+        android:id="@+id/videoContainer"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/content"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
         <LinearLayout
             android:id="@+id/link_block"
@@ -92,7 +102,7 @@
             android:backgroundTint="#1A000000"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/content">
+            app:layout_constraintTop_toBottomOf="@id/videoContainer">
 
             <TextView
                 android:id="@+id/link_title"
