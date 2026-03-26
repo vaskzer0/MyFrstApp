@@ -8,7 +8,7 @@
         android:layout_height="wrap_content"
         android:background="@color/background_light"
         android:padding="16dp"
-        tools:context=".MainActivity">
+        tools:context=".AppActivity">
 
         <ImageView
             android:id="@+id/avatar"
