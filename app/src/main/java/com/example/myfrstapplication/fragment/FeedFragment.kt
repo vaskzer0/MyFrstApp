@@ -15,6 +15,7 @@ import com.example.myfrstapplication.databinding.FragmentFeedBinding
 import com.example.myfrstapplication.dto.Post
 import com.example.myfrstapplication.viewmodel.PostViewModel
 import java.util.List
+import androidx.lifecycle.observe
 
 class FeedFragment : Fragment() {
 
@@ -22,7 +23,6 @@ class FeedFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: PostViewModel by viewModels()
-
     private val interactionListener = object : OnPostInteractionListener {
         override fun onLike(post: Post) {
             viewModel.likeById(post.id)
@@ -81,13 +81,12 @@ class FeedFragment : Fragment() {
         val adapter = PostsAdapter(interactionListener)
         binding.list.adapter = adapter
 
-        // Важно: используем viewLifecycleOwner для подписки
-        viewModel.data.observe(viewLifecycleOwner) { posts ->
-            adapter.submitList(posts as kotlin.collections.List<Post?>?)
+        viewModel.data.observe(viewLifecycleOwner) { posts: kotlin.collections.List<Post> ->
+            // Тип теперь совпадает с тем, что отдает ViewModel
+            adapter.submitList(posts)
         }
 
         binding.fab.setOnClickListener {
-            // Переход к созданию нового поста
             findNavController().navigate(R.id.action_feedFragment2_to_newPostFragment)
         }
     }
